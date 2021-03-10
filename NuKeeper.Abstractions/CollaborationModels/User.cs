@@ -11,6 +11,12 @@ namespace NuKeeper.Abstractions.CollaborationModels
             Email = email;
         }
 
+        public User(int id, string login, string name, string email) : this(login, name, email)
+        {
+            Id = id;
+        }
+
+        public int? Id { get; }
         public string Login { get; }
         public string Name { get; }
         public string Email { get; }

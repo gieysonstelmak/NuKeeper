@@ -25,5 +25,8 @@ namespace NuKeeper.Gitlab.Model
 
         [JsonProperty("labels")]
         public IList<string> Labels { get; set; }
+
+        [JsonProperty("assignee_id")]
+        public int AssigneeId { get; set; }
     }
 }
