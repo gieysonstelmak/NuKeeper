@@ -1,10 +1,10 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
+using System.Text.RegularExpressions;
 
 namespace NuKeeper.Gitlab
 {
@@ -13,6 +13,7 @@ namespace NuKeeper.Gitlab
         private readonly IEnvironmentVariablesProvider _environmentVariablesProvider;
         private const string GitLabTokenEnvironmentVariableName = "NuKeeper_gitlab_token";
         private const string UrlPattern = "https://gitlab.com/{username}/{projectname}.git";
+        private const string PathPattern = @"^\/([\w]+)\/(.*)\.git$";
 
         public GitlabSettingsReader(IEnvironmentVariablesProvider environmentVariablesProvider)
         {
@@ -51,18 +52,16 @@ namespace NuKeeper.Gitlab
 
             // Assumption - url should look like https://gitlab.com/{username}/{projectname}.git";
             var path = repositoryUri.AbsolutePath;
-            var pathParts = path.Split('/')
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .ToList();
 
-            if (pathParts.Count != 2)
+            var paths = Regex.Match(path, PathPattern, RegexOptions.Compiled);
+            if (!paths.Success)
             {
                 throw new NuKeeperException(
                     $"The provided uri was is not in the correct format. Provided {repositoryUri} and format should be {UrlPattern}");
             }
 
-            var repoOwner = pathParts[0];
-            var repoName = pathParts[1].Replace(".git", string.Empty);
+            var repoOwner = paths.Groups[1].ToString();
+            var repoName = paths.Groups[2].ToString();
 
             var uriBuilder = new UriBuilder(repositoryUri) { Path = "/api/v4/" };
 

@@ -39,7 +39,7 @@ namespace NuKeeper.Gitlab
         {
             var user = await _client.GetCurrentUser();
 
-            return new User(user.UserName, user.Name, user.Email);
+            return new User(user.Id, user.UserName, user.Name, user.Email);
         }
 
         public async Task<bool> PullRequestExists(ForkData target, string headBranch, string baseBranch)
@@ -71,6 +71,7 @@ namespace NuKeeper.Gitlab
 
             var projectName = target.Owner;
             var repositoryName = target.Name;
+            var user = await GetCurrentUser();
 
             var mergeRequest = new MergeRequest
             {
@@ -80,7 +81,8 @@ namespace NuKeeper.Gitlab
                 TargetBranch = request.BaseRef,
                 Id = $"{projectName}/{repositoryName}",
                 RemoveSourceBranch = request.DeleteBranchAfterMerge,
-                Labels = labels.ToList()
+                Labels = labels.ToList(),
+                AssigneeId = user.Id ?? 0
             };
 
             await _client.OpenMergeRequest(projectName, repositoryName, mergeRequest);

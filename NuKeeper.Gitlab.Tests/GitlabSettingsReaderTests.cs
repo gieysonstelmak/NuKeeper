@@ -52,6 +52,14 @@ namespace NuKeeper.Gitlab.Tests
             Assert.AreEqual(true, canRead);
         }
 
+        [Test]
+        public async Task AssumesItCanReadGitLabSaasUrls()
+        {
+            var canRead = await _gitlabSettingsReader.CanRead(new Uri("https://gitlab.com/user/subgroup/projectname.git"));
+
+            Assert.AreEqual(true, canRead);
+        }
+
         [TestCase(null)]
         [TestCase("master")]
         public async Task GetsCorrectSettingsFromTheUrl(string targetBranch)
@@ -64,6 +72,22 @@ namespace NuKeeper.Gitlab.Tests
             Assert.AreEqual(repositoryUri, repositorySettings.RepositoryUri);
             Assert.AreEqual("user", repositorySettings.RepositoryOwner);
             Assert.AreEqual("projectname", repositorySettings.RepositoryName);
+            Assert.AreEqual(targetBranch, repositorySettings.RemoteInfo?.BranchName);
+            Assert.AreEqual(false, repositorySettings.SetAutoMerge);
+        }
+
+        [TestCase(null)]
+        [TestCase("master")]
+        public async Task GetsCorrectSettingsFromTheSaasUrl(string targetBranch)
+        {
+            var repositoryUri = new Uri("https://gitlab.com/user/development/backend/dummy.git");
+            var repositorySettings = await _gitlabSettingsReader.RepositorySettings(repositoryUri, true, targetBranch);
+
+            Assert.IsNotNull(repositorySettings);
+            Assert.AreEqual(new Uri("https://gitlab.com/api/v4/"), repositorySettings.ApiUri);
+            Assert.AreEqual(repositoryUri, repositorySettings.RepositoryUri);
+            Assert.AreEqual("user", repositorySettings.RepositoryOwner);
+            Assert.AreEqual("development/backend/dummy", repositorySettings.RepositoryName);
             Assert.AreEqual(targetBranch, repositorySettings.RemoteInfo?.BranchName);
             Assert.AreEqual(false, repositorySettings.SetAutoMerge);
         }
